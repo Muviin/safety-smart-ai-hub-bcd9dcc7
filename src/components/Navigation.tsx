@@ -33,7 +33,7 @@ const Navigation = () => {
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
             <Shield className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold text-primary">SafetyAI</span>
+            <span className="text-xl font-bold text-primary">Muviin's Safety Guide</span>
           </Link>
 
           {/* Desktop Navigation */}

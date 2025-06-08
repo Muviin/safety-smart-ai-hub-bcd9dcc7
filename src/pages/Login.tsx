@@ -49,7 +49,7 @@ const Login = () => {
       await signup(email, password, name);
       toast({
         title: "Account created!",
-        description: "Welcome to SafetyAI. Let's get started.",
+        description: "Welcome to Muviin's Safety Guide. Let's get started.",
       });
       navigate('/dashboard');
     } catch (error) {
@@ -71,7 +71,7 @@ const Login = () => {
               <Shield className="h-8 w-8 text-primary-foreground" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-primary">SafetyAI</h1>
+          <h1 className="text-3xl font-bold text-primary">Muviin's Safety Guide</h1>
           <p className="text-muted-foreground mt-2">
             Secure access to smarter workplace safety
           </p>
