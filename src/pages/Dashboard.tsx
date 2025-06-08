@@ -5,16 +5,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Link } from 'react-router-dom';
-import { MessageSquare, AlertTriangle, ArrowRight, Send } from 'lucide-react';
+import { MessageSquare, AlertTriangle, ArrowRight, Send, CheckCircle, AlertCircle } from 'lucide-react';
 
 const Dashboard = () => {
   const [chatMessage, setChatMessage] = useState('');
   const [quickRisk, setQuickRisk] = useState('');
+  const [riskResult, setRiskResult] = useState(null);
   const [chatHistory, setChatHistory] = useState([
     {
       type: 'bot',
-      message: 'Hello! I\'m your AI Safety Assistant. Ask me anything about workplace safety, fire safety, or working at height.',
+      message: 'Hello! I\'m your AI Safety Assistant. Ask me anything about workplace safety, including work at height, fire safety, chemical handling, machinery operation, electrical safety, manual handling, confined spaces, and more.',
       timestamp: new Date()
     }
   ]);
@@ -22,12 +24,14 @@ const Dashboard = () => {
 
   const sampleQuestions = [
     "What PPE is required for working at height?",
-    "How often should fire extinguishers be inspected?",
-    "What are the main causes of workplace accidents?",
-    "Safety checklist for confined spaces"
+    "How to handle chemical spills safely?",
+    "Electrical safety checklist",
+    "Manual lifting best practices",
+    "Confined space entry procedures",
+    "Fire evacuation protocols"
   ];
 
-  // AI response system for safety questions
+  // Enhanced AI response system for comprehensive safety questions
   const getSafetyResponse = (question: string): string => {
     const lowerQuestion = question.toLowerCase();
     
@@ -36,42 +40,152 @@ const Dashboard = () => {
       return "For working at height, essential PPE includes: safety harness with full body support, hard hat, safety boots with slip-resistant soles, high-visibility clothing, and cut-resistant gloves. All equipment must be inspected before use and certified to current standards (ANSI/OSHA). Replace any damaged equipment immediately.";
     }
     
-    if (lowerQuestion.includes('ladder') && (lowerQuestion.includes('safe') || lowerQuestion.includes('position'))) {
-      return "Follow the 4:1 ladder safety rule - for every 4 feet of height, position the base 1 foot from the wall. Ensure the ladder extends 3 feet above the landing point, maintain three points of contact while climbing, never exceed the weight limit, and always face the ladder when ascending or descending.";
+    if (lowerQuestion.includes('ladder')) {
+      return "Ladder safety: Follow the 4:1 rule (4 feet height = 1 foot from wall), extend 3 feet above landing, maintain three points of contact, face ladder when climbing, check weight limits, and inspect for damage before use. Never lean sideways or overreach.";
     }
     
-    if (lowerQuestion.includes('fall protection') || (lowerQuestion.includes('fall') && lowerQuestion.includes('system'))) {
-      return "Fall protection is required at 6+ feet in general industry and 4+ feet in construction. Main systems include: Personal Fall Arrest Systems (PFAS), guardrails, safety nets, positioning systems, and travel restraint systems. Each system requires proper anchorage points rated for 5,000 lbs per person.";
+    if (lowerQuestion.includes('scaffolding')) {
+      return "Scaffolding safety: Ensure proper assembly by qualified personnel, use guardrails and toeboards, check platform planking, maintain safe access points, inspect daily, and ensure 10:1 base-to-height ratio for stability.";
     }
     
     // Fire safety responses
-    if (lowerQuestion.includes('fire extinguisher') && lowerQuestion.includes('inspect')) {
-      return "Fire extinguishers require: monthly visual inspections (check pressure gauge, pin/tamper seal, general condition), annual maintenance by qualified personnel, and internal examination every 6 years. Keep detailed inspection records and ensure extinguishers are easily accessible and properly mounted.";
+    if (lowerQuestion.includes('fire') && (lowerQuestion.includes('extinguisher') || lowerQuestion.includes('suppress'))) {
+      return "Fire extinguisher types: Class A (water/foam for ordinary combustibles), Class B (foam/CO2 for flammable liquids), Class C (CO2/dry chemical for electrical), Class D (dry powder for metals), Class K (wet chemical for cooking oils). Remember PASS: Pull pin, Aim at base, Squeeze handle, Sweep side to side.";
     }
     
-    if (lowerQuestion.includes('fire') && lowerQuestion.includes('class')) {
-      return "Fire classes: Class A (ordinary combustibles like wood/paper) - use water/foam; Class B (flammable liquids) - use foam/CO2; Class C (electrical) - use CO2/dry chemical; Class D (metals) - use dry powder; Class K (cooking oils) - use wet chemical. Never use water on electrical or grease fires.";
+    if (lowerQuestion.includes('evacuation') || (lowerQuestion.includes('fire') && lowerQuestion.includes('emergency'))) {
+      return "Fire evacuation: Sound alarm immediately, use nearest safe exit (never elevators), close doors behind you, proceed to assembly point, take roll call, remain until all-clear. Practice monthly drills and keep exit routes clear and marked.";
     }
     
-    if (lowerQuestion.includes('evacuation') || (lowerQuestion.includes('fire') && lowerQuestion.includes('drill'))) {
-      return "Fire evacuation procedure: 1) Sound the alarm immediately, 2) Exit via nearest safe route (not elevators), 3) Close doors behind you, 4) Proceed to designated assembly point, 5) Take roll call, 6) Remain at assembly point until all-clear. Practice monthly and ensure all exit routes are clearly marked and unobstructed.";
+    // Chemical safety
+    if (lowerQuestion.includes('chemical') || lowerQuestion.includes('hazardous material') || lowerQuestion.includes('spill')) {
+      return "Chemical safety: Read SDS (Safety Data Sheets), use appropriate PPE, ensure proper ventilation, store chemicals correctly, have spill kits available, know emergency procedures. For spills: evacuate area, contain if safe, use appropriate absorbents, dispose properly, report immediately.";
+    }
+    
+    if (lowerQuestion.includes('msds') || lowerQuestion.includes('sds')) {
+      return "Safety Data Sheets (SDS) provide crucial information: hazard identification, composition, first-aid measures, fire-fighting measures, handling and storage, exposure controls/PPE, physical/chemical properties, and disposal considerations. Always consult before handling chemicals.";
+    }
+    
+    // Electrical safety
+    if (lowerQuestion.includes('electrical') || lowerQuestion.includes('electricity') || lowerQuestion.includes('lockout')) {
+      return "Electrical safety: Use lockout/tagout (LOTO) procedures, test circuits before work, use insulated tools, wear appropriate PPE, maintain safe distances from power lines, inspect equipment regularly, and never work on live circuits unless absolutely necessary with proper training.";
+    }
+    
+    // Manual handling
+    if (lowerQuestion.includes('lifting') || lowerQuestion.includes('manual handling') || lowerQuestion.includes('ergonomic')) {
+      return "Manual handling: Keep load close to body, bend knees not back, test weight before lifting, get help for heavy items, use mechanical aids when possible, avoid twisting while lifting, take breaks, and report any discomfort immediately.";
+    }
+    
+    // Machinery safety
+    if (lowerQuestion.includes('machinery') || lowerQuestion.includes('equipment') || lowerQuestion.includes('guard')) {
+      return "Machinery safety: Ensure all guards are in place, follow lockout/tagout procedures, wear appropriate PPE, receive proper training, inspect before use, report defects immediately, never bypass safety devices, and maintain safe distances from moving parts.";
+    }
+    
+    // Confined spaces
+    if (lowerQuestion.includes('confined space')) {
+      return "Confined space safety: Obtain entry permit, test atmosphere (oxygen 19.5-23.5%, toxic gases <10% LEL), ensure continuous ventilation, use lockout/tagout, station attendant outside, wear appropriate PPE and detection equipment, establish rescue procedures, never enter alone.";
     }
     
     // General workplace safety
-    if (lowerQuestion.includes('accident') && lowerQuestion.includes('cause')) {
-      return "Main causes of workplace accidents: 1) Slips, trips, and falls (33%), 2) Being struck by objects (10%), 3) Falls from height (8%), 4) Manual handling injuries (20%), 5) Being caught in machinery (7%). Prevention focuses on proper training, PPE use, hazard identification, and maintaining clean, organized workspaces.";
+    if (lowerQuestion.includes('accident') && lowerQuestion.includes('prevent')) {
+      return "Accident prevention: Conduct regular risk assessments, provide proper training, maintain equipment, ensure good housekeeping, use appropriate PPE, follow procedures, report near misses, investigate incidents, and foster a safety culture.";
     }
     
-    if (lowerQuestion.includes('confined space')) {
-      return "Confined space safety checklist: 1) Obtain entry permit, 2) Test atmosphere (oxygen 19.5-23.5%, toxic gases <10% LEL), 3) Ensure continuous ventilation, 4) Use lockout/tagout procedures, 5) Station attendant outside, 6) Wear appropriate PPE and detection equipment, 7) Establish emergency rescue procedures, 8) Never enter alone.";
+    if (lowerQuestion.includes('risk assessment')) {
+      return "Risk assessment process: 1) Identify hazards, 2) Determine who might be harmed, 3) Evaluate risks and existing controls, 4) Record findings and implement additional controls, 5) Review and update regularly. Use hierarchy of controls: elimination, substitution, engineering, administrative, PPE.";
     }
     
-    if (lowerQuestion.includes('harness') || lowerQuestion.includes('safety belt')) {
-      return "Safety harness guidelines: Use full-body harnesses (not belts) for fall protection, inspect before each use for cuts/fraying/damaged hardware, ensure proper fit (snug but comfortable), attach to certified anchor points, replace if dropped or after arresting a fall, and store properly away from chemicals/UV light.";
+    if (lowerQuestion.includes('ppe') || lowerQuestion.includes('personal protective equipment')) {
+      return "PPE selection: Assess specific hazards, ensure proper fit and comfort, provide training on use and maintenance, inspect regularly, replace when damaged, and remember PPE is the last line of defense - eliminate hazards at source when possible.";
     }
     
-    // Default response for unrecognized questions
-    return "I can help with workplace safety questions about work at height, fire safety, PPE requirements, and general safety procedures. Could you please rephrase your question or try asking about specific safety topics like ladder safety, fire extinguishers, fall protection, or confined spaces?";
+    if (lowerQuestion.includes('incident') || lowerQuestion.includes('report')) {
+      return "Incident reporting: Report immediately to supervisor, provide first aid if needed, preserve scene for investigation, document thoroughly (who, what, when, where, why), identify root causes, implement corrective actions, and follow up to prevent recurrence.";
+    }
+    
+    if (lowerQuestion.includes('training') || lowerQuestion.includes('safety training')) {
+      return "Safety training essentials: Job-specific hazard awareness, proper PPE use, emergency procedures, equipment operation, risk assessment, incident reporting, and regular refresher sessions. Training should be practical, relevant, and regularly updated.";
+    }
+    
+    if (lowerQuestion.includes('noise') || lowerQuestion.includes('hearing protection')) {
+      return "Hearing protection: Use when noise exceeds 85dB (8-hour exposure), choose appropriate type (earplugs/earmuffs), ensure proper fit, maintain equipment, conduct audiometric testing, and implement noise control measures where possible.";
+    }
+    
+    if (lowerQuestion.includes('ventilation') || lowerQuestion.includes('air quality')) {
+      return "Ventilation safety: Ensure adequate fresh air supply, use local exhaust for hazardous processes, monitor air quality, maintain ventilation systems, and provide respiratory protection when engineering controls are insufficient.";
+    }
+    
+    // Default comprehensive response
+    return "I can help with all workplace safety topics including: work at height, fire safety, chemical handling, electrical safety, machinery operation, manual handling, confined spaces, PPE selection, risk assessment, incident reporting, emergency procedures, and safety training. Please provide more specific details about your safety question or concern.";
+  };
+
+  // Enhanced risk prediction system
+  const predictRisk = (scenario: string) => {
+    const lowerScenario = scenario.toLowerCase();
+    let riskLevel = 'Low';
+    let percentage = 20;
+    let suggestions = [];
+    let color = 'bg-risk-low';
+    let icon = <CheckCircle className="h-5 w-5" />;
+
+    // High risk scenarios
+    if (lowerScenario.includes('height') || lowerScenario.includes('ladder') || lowerScenario.includes('roof') || 
+        lowerScenario.includes('electrical') && lowerScenario.includes('live') ||
+        lowerScenario.includes('chemical') && lowerScenario.includes('without') ||
+        lowerScenario.includes('confined space') && !lowerScenario.includes('permit') ||
+        lowerScenario.includes('machinery') && lowerScenario.includes('without guard')) {
+      
+      riskLevel = 'High';
+      percentage = Math.floor(Math.random() * 20) + 75; // 75-95%
+      color = 'bg-risk-high';
+      icon = <AlertTriangle className="h-5 w-5" />;
+      
+      suggestions = [
+        'Stop work immediately and assess hazards',
+        'Implement proper safety controls before proceeding',
+        'Ensure all required PPE is worn and functioning',
+        'Conduct thorough risk assessment',
+        'Provide additional safety training if needed',
+        'Have emergency response procedures ready',
+        'Consider alternative safer methods'
+      ];
+    }
+    // Medium risk scenarios
+    else if (lowerScenario.includes('machinery') || lowerScenario.includes('chemical') || 
+             lowerScenario.includes('noise') || lowerScenario.includes('lifting') ||
+             lowerScenario.includes('crowded') || lowerScenario.includes('weather')) {
+      
+      riskLevel = 'Medium';
+      percentage = Math.floor(Math.random() * 20) + 45; // 45-65%
+      color = 'bg-risk-medium';
+      icon = <AlertCircle className="h-5 w-5" />;
+      
+      suggestions = [
+        'Follow established safety procedures',
+        'Ensure appropriate PPE is available and used',
+        'Verify safety equipment is functioning',
+        'Brief team on specific hazards',
+        'Monitor conditions throughout work',
+        'Have first aid resources available'
+      ];
+    }
+    // Low risk scenarios
+    else {
+      riskLevel = 'Low';
+      percentage = Math.floor(Math.random() * 25) + 15; // 15-40%
+      color = 'bg-risk-low';
+      icon = <CheckCircle className="h-5 w-5" />;
+      
+      suggestions = [
+        'Follow standard safety protocols',
+        'Wear appropriate PPE for the task',
+        'Maintain situational awareness',
+        'Report any safety concerns immediately',
+        'Keep work area clean and organized'
+      ];
+    }
+
+    return { level: riskLevel, percentage, suggestions, color, icon };
   };
 
   const handleChatSubmit = (e: React.FormEvent) => {
@@ -104,8 +218,9 @@ const Dashboard = () => {
   const handleQuickPredict = (e: React.FormEvent) => {
     e.preventDefault();
     if (!quickRisk.trim()) return;
-    console.log('Quick risk prediction:', quickRisk);
-    // This would trigger the ML prediction service
+    
+    const result = predictRisk(quickRisk);
+    setRiskResult(result);
     setQuickRisk('');
   };
 
@@ -122,7 +237,7 @@ const Dashboard = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-primary mb-2">Safety Dashboard</h1>
           <p className="text-muted-foreground">
-            Get instant safety insights and AI-powered risk predictions
+            Get instant safety insights and AI-powered risk predictions for all workplace scenarios
           </p>
         </div>
 
@@ -136,7 +251,7 @@ const Dashboard = () => {
                 <CardTitle>AI Safety Chatbot</CardTitle>
               </div>
               <CardDescription>
-                Ask questions about work at height and fire safety
+                Ask questions about all workplace safety topics
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -195,7 +310,7 @@ const Dashboard = () => {
                     <Input
                       value={chatMessage}
                       onChange={(e) => setChatMessage(e.target.value)}
-                      placeholder="Ask about safety procedures..."
+                      placeholder="Ask about any workplace safety topic..."
                       className="flex-1"
                       data-chatbot="true"
                     />
@@ -216,7 +331,7 @@ const Dashboard = () => {
                 <CardTitle>Quick Risk Predictor</CardTitle>
               </div>
               <CardDescription>
-                Get instant risk assessment for workplace scenarios
+                Get instant graphical risk assessment for any workplace scenario
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -236,10 +351,44 @@ const Dashboard = () => {
                 </Button>
               </form>
 
+              {/* Risk Result Display */}
+              {riskResult && (
+                <div className="space-y-4 p-4 bg-muted/30 rounded-lg animate-fade-in">
+                  <div className="text-center">
+                    <Badge className={`${riskResult.color} text-white text-lg px-4 py-2 mb-3`}>
+                      <div className="flex items-center space-x-2">
+                        {riskResult.icon}
+                        <span>{riskResult.level} Risk</span>
+                      </div>
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Risk Level</span>
+                      <span className="text-sm font-bold">{riskResult.percentage}%</span>
+                    </div>
+                    <Progress value={riskResult.percentage} className="h-3" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Safety Recommendations:</p>
+                    <ul className="space-y-1">
+                      {riskResult.suggestions.slice(0, 3).map((suggestion, index) => (
+                        <li key={index} className="text-xs flex items-start space-x-2">
+                          <span className="text-safety-orange mt-1">•</span>
+                          <span>{suggestion}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
               <div className="pt-4 border-t">
                 <Link to="/risk-prediction">
                   <Button variant="outline" className="w-full group">
-                    See full prediction details
+                    See detailed prediction analysis
                     <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
@@ -254,8 +403,12 @@ const Dashboard = () => {
                     <Badge className="bg-risk-high text-white">High</Badge>
                   </div>
                   <div className="flex items-center justify-between p-2 bg-muted/50 rounded">
-                    <span className="text-sm truncate">Blocked fire exit</span>
+                    <span className="text-sm truncate">Chemical handling with PPE</span>
                     <Badge className="bg-risk-medium text-white">Medium</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-2 bg-muted/50 rounded">
+                    <span className="text-sm truncate">Office desk work</span>
+                    <Badge className="bg-risk-low text-white">Low</Badge>
                   </div>
                 </div>
               </div>
@@ -267,25 +420,25 @@ const Dashboard = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold text-primary">156</div>
-              <p className="text-sm text-muted-foreground">Safety Queries</p>
+              <div className="text-2xl font-bold text-primary">324</div>
+              <p className="text-sm text-muted-foreground">Safety Queries Answered</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold text-safety-orange">23</div>
+              <div className="text-2xl font-bold text-safety-orange">67</div>
               <p className="text-sm text-muted-foreground">Risk Assessments</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold text-risk-low">89%</div>
+              <div className="text-2xl font-bold text-risk-low">92%</div>
               <p className="text-sm text-muted-foreground">Safety Score</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold text-primary">12</div>
+              <div className="text-2xl font-bold text-primary">28</div>
               <p className="text-sm text-muted-foreground">Days Incident-Free</p>
             </CardContent>
           </Card>
