@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 217 67% 28%; /* Deep blue #113C7E */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -32,24 +33,23 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 217 67% 28%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* Custom colors for workplace safety theme */
+    --safety-orange: 24 100% 63%; /* #FF8C42 */
+    --risk-low: 142 76% 36%; /* Green */
+    --risk-medium: 45 93% 50%; /* Amber */
+    --risk-high: 0 84% 60%; /* Red */
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -98,6 +98,44 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer utilities {
+  .safety-orange {
+    color: hsl(var(--safety-orange));
+  }
+  
+  .bg-safety-orange {
+    background-color: hsl(var(--safety-orange));
+  }
+  
+  .border-safety-orange {
+    border-color: hsl(var(--safety-orange));
+  }
+  
+  .risk-low {
+    color: hsl(var(--risk-low));
+  }
+  
+  .bg-risk-low {
+    background-color: hsl(var(--risk-low));
+  }
+  
+  .risk-medium {
+    color: hsl(var(--risk-medium));
+  }
+  
+  .bg-risk-medium {
+    background-color: hsl(var(--risk-medium));
+  }
+  
+  .risk-high {
+    color: hsl(var(--risk-high));
+  }
+  
+  .bg-risk-high {
+    background-color: hsl(var(--risk-high));
   }
 }
