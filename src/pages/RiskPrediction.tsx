@@ -5,19 +5,235 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react';
 
-interface RiskResult {
-  level: 'Low' | 'Medium' | 'High';
-  percentage: number;
-  suggestions: string[];
+interface HIRARCResult {
+  hazardType: string;
+  likelihood: number;
+  severity: number;
+  riskScore: number;
+  riskLevel: 'Low' | 'Medium' | 'High';
+  riskColor: string;
+  controlMeasures: string[];
 }
 
 const RiskPrediction = () => {
   const [scenario, setScenario] = useState('');
-  const [result, setResult] = useState<RiskResult | null>(null);
+  const [result, setResult] = useState<HIRARCResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const analyzeWithHIRARC = (scenario: string): HIRARCResult => {
+    const lowerScenario = scenario.toLowerCase();
+    
+    // Hazard Identification
+    let hazardType = 'General Workplace Hazard';
+    let likelihood = 2;
+    let severity = 2;
+    let controlMeasures: string[] = [];
+
+    // Work at Height Hazards
+    if (lowerScenario.includes('ladder') || lowerScenario.includes('height') || lowerScenario.includes('roof') || lowerScenario.includes('scaffolding')) {
+      hazardType = 'Fall from Height';
+      
+      // Assess likelihood
+      if (lowerScenario.includes('without harness') || lowerScenario.includes('no safety') || lowerScenario.includes('wet') || lowerScenario.includes('windy')) {
+        likelihood = 4; // Likely
+      } else if (lowerScenario.includes('proper') || lowerScenario.includes('safety equipment')) {
+        likelihood = 2; // Unlikely
+      } else {
+        likelihood = 3; // Possible
+      }
+      
+      // Assess severity
+      if (lowerScenario.includes('high') || lowerScenario.includes('story') || lowerScenario.includes('floor')) {
+        severity = 4; // Major
+      } else {
+        severity = 3; // Moderate
+      }
+      
+      controlMeasures = [
+        'Use proper fall protection equipment (harness, lanyard)',
+        'Inspect all equipment before use',
+        'Ensure stable ladder positioning (4:1 rule)',
+        'Maintain three points of contact',
+        'Use spotters and barriers',
+        'Check weather conditions'
+      ];
+    }
+    
+    // Electrical Hazards
+    else if (lowerScenario.includes('electrical') || lowerScenario.includes('wiring') || lowerScenario.includes('power') || lowerScenario.includes('voltage')) {
+      hazardType = 'Electrical Shock/Electrocution';
+      
+      if (lowerScenario.includes('live') || lowerScenario.includes('energized') || lowerScenario.includes('wet')) {
+        likelihood = 4;
+        severity = 5; // Catastrophic
+      } else if (lowerScenario.includes('lockout') || lowerScenario.includes('isolated')) {
+        likelihood = 1;
+        severity = 3;
+      } else {
+        likelihood = 3;
+        severity = 4;
+      }
+      
+      controlMeasures = [
+        'Implement lockout/tagout procedures',
+        'Use insulated tools and PPE',
+        'Test circuits before work',
+        'Maintain safe distances from live parts',
+        'Ensure proper grounding',
+        'Use qualified electricians only'
+      ];
+    }
+    
+    // Chemical Hazards
+    else if (lowerScenario.includes('chemical') || lowerScenario.includes('acid') || lowerScenario.includes('solvent') || lowerScenario.includes('toxic')) {
+      hazardType = 'Chemical Exposure';
+      
+      if (lowerScenario.includes('without ppe') || lowerScenario.includes('no ventilation') || lowerScenario.includes('spill')) {
+        likelihood = 4;
+        severity = 4;
+      } else if (lowerScenario.includes('proper ppe') || lowerScenario.includes('ventilation')) {
+        likelihood = 2;
+        severity = 3;
+      } else {
+        likelihood = 3;
+        severity = 3;
+      }
+      
+      controlMeasures = [
+        'Use appropriate respiratory protection',
+        'Wear chemical-resistant gloves and clothing',
+        'Ensure adequate ventilation',
+        'Have emergency eyewash/shower available',
+        'Store chemicals properly',
+        'Train workers on SDS information'
+      ];
+    }
+    
+    // Fire Hazards
+    else if (lowerScenario.includes('fire') || lowerScenario.includes('flammable') || lowerScenario.includes('hot work') || lowerScenario.includes('welding')) {
+      hazardType = 'Fire/Explosion';
+      
+      if (lowerScenario.includes('flammable') && lowerScenario.includes('without permit')) {
+        likelihood = 4;
+        severity = 5;
+      } else if (lowerScenario.includes('fire watch') || lowerScenario.includes('permit')) {
+        likelihood = 2;
+        severity = 4;
+      } else {
+        likelihood = 3;
+        severity = 4;
+      }
+      
+      controlMeasures = [
+        'Obtain hot work permits',
+        'Remove flammable materials from area',
+        'Have fire extinguisher readily available',
+        'Assign fire watch personnel',
+        'Check area 30 minutes after work completion',
+        'Ensure proper ventilation'
+      ];
+    }
+    
+    // Machinery Hazards
+    else if (lowerScenario.includes('machinery') || lowerScenario.includes('equipment') || lowerScenario.includes('moving parts')) {
+      hazardType = 'Mechanical Injury';
+      
+      if (lowerScenario.includes('without guard') || lowerScenario.includes('broken') || lowerScenario.includes('maintenance')) {
+        likelihood = 4;
+        severity = 4;
+      } else if (lowerScenario.includes('proper guard') || lowerScenario.includes('safety')) {
+        likelihood = 2;
+        severity = 3;
+      } else {
+        likelihood = 3;
+        severity = 3;
+      }
+      
+      controlMeasures = [
+        'Ensure all machine guards are in place',
+        'Implement lockout/tagout procedures',
+        'Provide proper training on equipment use',
+        'Conduct regular maintenance and inspections',
+        'Use appropriate PPE',
+        'Keep work area clean and well-lit'
+      ];
+    }
+    
+    // Confined Space Hazards
+    else if (lowerScenario.includes('confined space') || lowerScenario.includes('tank') || lowerScenario.includes('vessel')) {
+      hazardType = 'Confined Space Entry';
+      
+      if (lowerScenario.includes('without permit') || lowerScenario.includes('no ventilation') || lowerScenario.includes('alone')) {
+        likelihood = 4;
+        severity = 5;
+      } else if (lowerScenario.includes('permit') && lowerScenario.includes('attendant')) {
+        likelihood = 2;
+        severity = 4;
+      } else {
+        likelihood = 3;
+        severity = 4;
+      }
+      
+      controlMeasures = [
+        'Obtain confined space entry permit',
+        'Test atmosphere before and during entry',
+        'Provide continuous mechanical ventilation',
+        'Station trained attendant outside',
+        'Use appropriate respiratory protection',
+        'Establish emergency rescue procedures'
+      ];
+    }
+    
+    // Manual Handling
+    else if (lowerScenario.includes('lifting') || lowerScenario.includes('carrying') || lowerScenario.includes('heavy')) {
+      hazardType = 'Musculoskeletal Injury';
+      
+      if (lowerScenario.includes('heavy') || lowerScenario.includes('awkward') || lowerScenario.includes('repetitive')) {
+        likelihood = 3;
+        severity = 2;
+      } else {
+        likelihood = 2;
+        severity = 2;
+      }
+      
+      controlMeasures = [
+        'Use mechanical lifting aids when possible',
+        'Get help for heavy or awkward loads',
+        'Keep load close to body',
+        'Bend knees, not back',
+        'Avoid twisting while lifting',
+        'Take regular breaks for repetitive tasks'
+      ];
+    }
+
+    // Calculate risk score and level
+    const riskScore = likelihood * severity;
+    let riskLevel: 'Low' | 'Medium' | 'High';
+    let riskColor: string;
+
+    if (riskScore >= 15) {
+      riskLevel = 'High';
+      riskColor = 'bg-red-500';
+    } else if (riskScore >= 5) {
+      riskLevel = 'Medium';
+      riskColor = 'bg-yellow-500';
+    } else {
+      riskLevel = 'Low';
+      riskColor = 'bg-green-500';
+    }
+
+    return {
+      hazardType,
+      likelihood,
+      severity,
+      riskScore,
+      riskLevel,
+      riskColor,
+      controlMeasures
+    };
+  };
 
   const handlePredict = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,56 +241,12 @@ const RiskPrediction = () => {
 
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Simulate processing time
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // Mock result based on keywords
-    const mockResult: RiskResult = scenario.toLowerCase().includes('ladder') || scenario.toLowerCase().includes('height')
-      ? {
-          level: 'High',
-          percentage: 85,
-          suggestions: [
-            'Ensure proper fall protection equipment is worn',
-            'Conduct a pre-work safety briefing',
-            'Verify ladder stability and positioning',
-            'Maintain three points of contact when climbing',
-            'Have a spotter present during work'
-          ]
-        }
-      : scenario.toLowerCase().includes('fire') || scenario.toLowerCase().includes('chemical')
-      ? {
-          level: 'Medium',
-          percentage: 62,
-          suggestions: [
-            'Verify fire suppression systems are operational',
-            'Ensure clear evacuation routes',
-            'Check availability of fire extinguishers',
-            'Review emergency response procedures',
-            'Conduct regular safety drills'
-          ]
-        }
-      : {
-          level: 'Low',
-          percentage: 28,
-          suggestions: [
-            'Follow standard safety protocols',
-            'Wear appropriate personal protective equipment',
-            'Maintain situational awareness',
-            'Report any safety concerns immediately'
-          ]
-        };
-
-    setResult(mockResult);
+    const analysis = analyzeWithHIRARC(scenario);
+    setResult(analysis);
     setIsLoading(false);
-  };
-
-  const getRiskColor = (level: string) => {
-    switch (level) {
-      case 'High': return 'bg-risk-high';
-      case 'Medium': return 'bg-risk-medium';
-      case 'Low': return 'bg-risk-low';
-      default: return 'bg-muted';
-    }
   };
 
   const getRiskIcon = (level: string) => {
@@ -93,18 +265,18 @@ const RiskPrediction = () => {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">Detailed Risk Prediction</h1>
+          <h1 className="text-3xl font-bold text-primary mb-2">HIRARC Risk Assessment</h1>
           <p className="text-muted-foreground">
-            Describe a workplace situation to get comprehensive risk assessment and safety recommendations
+            Hazard Identification, Risk Assessment & Risk Control analysis for workplace scenarios
           </p>
         </div>
 
         {/* Input Form */}
         <Card className="mb-8 shadow-lg">
           <CardHeader>
-            <CardTitle>Scenario Description</CardTitle>
+            <CardTitle>Workplace Scenario Analysis</CardTitle>
             <CardDescription>
-              Provide detailed information about the workplace situation you want to assess
+              Describe the workplace situation for comprehensive HIRARC analysis
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -112,7 +284,7 @@ const RiskPrediction = () => {
               <Textarea
                 value={scenario}
                 onChange={(e) => setScenario(e.target.value)}
-                placeholder="Example: A maintenance worker needs to replace a light fixture 15 feet above the factory floor using a ladder. The area has some foot traffic and the floor may be slightly wet from recent cleaning..."
+                placeholder="Example: A maintenance worker needs to replace a light fixture 15 feet above the factory floor using a ladder without proper fall protection equipment..."
                 className="min-h-32 resize-none"
                 required
               />
@@ -120,80 +292,124 @@ const RiskPrediction = () => {
                 type="submit" 
                 className="w-full sm:w-auto bg-safety-orange hover:bg-safety-orange/90"
                 disabled={isLoading || !scenario.trim()}
-                data-predict="true"
               >
-                {isLoading ? 'Analyzing...' : 'Analyze Risk'}
+                {isLoading ? 'Analyzing with HIRARC...' : 'Analyze Risk'}
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        {/* Results */}
+        {/* HIRARC Results */}
         {(result || isLoading) && (
           <div className="space-y-6 animate-fade-in">
-            {/* Risk Level Card */}
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle>Risk Assessment</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Analyzing scenario...</p>
-                  </div>
-                ) : result && (
-                  <div className="space-y-6">
-                    {/* Risk Level Badge */}
-                    <div className="text-center">
-                      <Badge 
-                        className={`${getRiskColor(result.level)} text-white text-lg px-6 py-2 mb-4`}
-                      >
-                        <div className="flex items-center space-x-2">
-                          {getRiskIcon(result.level)}
-                          <span>{result.level} Risk</span>
-                        </div>
-                      </Badge>
-                    </div>
-
-                    {/* Risk Percentage */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Risk Level</span>
-                        <span className="text-sm font-bold">{result.percentage}%</span>
-                      </div>
-                      <Progress 
-                        value={result.percentage} 
-                        className="h-3"
-                      />
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Safety Suggestions */}
-            {result && (
+            {isLoading ? (
               <Card className="shadow-lg">
-                <CardHeader>
-                  <CardTitle>Safety Recommendations</CardTitle>
-                  <CardDescription>
-                    Follow these suggestions to minimize risk and ensure safety
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3">
-                    {result.suggestions.map((suggestion, index) => (
-                      <li key={index} className="flex items-start space-x-3">
-                        <div className="flex-shrink-0 w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5">
-                          <span className="text-xs font-bold text-primary">{index + 1}</span>
-                        </div>
-                        <span className="text-sm">{suggestion}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <CardContent className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Performing HIRARC analysis...</p>
                 </CardContent>
               </Card>
+            ) : result && (
+              <>
+                {/* Hazard Identification */}
+                <Card className="shadow-lg">
+                  <CardHeader>
+                    <CardTitle>Hazard Identification</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-lg font-semibold text-primary">
+                      {result.hazardType}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Risk Assessment */}
+                <Card className="shadow-lg">
+                  <CardHeader>
+                    <CardTitle>Risk Assessment</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid sm:grid-cols-3 gap-6">
+                      <div className="text-center p-4 bg-muted/50 rounded-lg">
+                        <div className="text-2xl font-bold text-primary">{result.likelihood}</div>
+                        <p className="text-sm text-muted-foreground">Likelihood</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {result.likelihood === 1 ? 'Inconceivable' : 
+                           result.likelihood === 2 ? 'Unlikely' :
+                           result.likelihood === 3 ? 'Possible' :
+                           result.likelihood === 4 ? 'Likely' : 'Most Likely'}
+                        </p>
+                      </div>
+                      <div className="text-center p-4 bg-muted/50 rounded-lg">
+                        <div className="text-2xl font-bold text-safety-orange">{result.severity}</div>
+                        <p className="text-sm text-muted-foreground">Severity</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {result.severity === 1 ? 'Negligible' : 
+                           result.severity === 2 ? 'Minor' :
+                           result.severity === 3 ? 'Moderate' :
+                           result.severity === 4 ? 'Major' : 'Catastrophic'}
+                        </p>
+                      </div>
+                      <div className="text-center p-4 bg-muted/50 rounded-lg">
+                        <Badge className={`${result.riskColor} text-white text-lg px-4 py-2 mb-2`}>
+                          <div className="flex items-center space-x-2">
+                            {getRiskIcon(result.riskLevel)}
+                            <span>{result.riskScore}</span>
+                          </div>
+                        </Badge>
+                        <p className="text-sm text-muted-foreground">Risk Score</p>
+                        <p className="text-xs font-semibold">{result.riskLevel} Risk</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Risk Control Measures */}
+                <Card className="shadow-lg">
+                  <CardHeader>
+                    <CardTitle>Risk Control Measures</CardTitle>
+                    <CardDescription>
+                      Recommended actions based on {result.riskLevel.toLowerCase()} risk level
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-3">
+                      {result.controlMeasures.map((measure, index) => (
+                        <li key={index} className="flex items-start space-x-3">
+                          <div className="flex-shrink-0 w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5">
+                            <span className="text-xs font-bold text-primary">{index + 1}</span>
+                          </div>
+                          <span className="text-sm">{measure}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    {result.riskLevel === 'High' && (
+                      <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-sm font-semibold text-red-800">
+                          ⚠️ HIGH RISK: Immediate action required. Stop work until proper controls are implemented.
+                        </p>
+                      </div>
+                    )}
+                    
+                    {result.riskLevel === 'Medium' && (
+                      <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p className="text-sm font-semibold text-yellow-800">
+                          ⚡ MEDIUM RISK: Planned control measures required before proceeding.
+                        </p>
+                      </div>
+                    )}
+                    
+                    {result.riskLevel === 'Low' && (
+                      <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm font-semibold text-green-800">
+                          ✓ LOW RISK: Acceptable with monitoring and basic precautions.
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
             )}
           </div>
         )}
@@ -202,18 +418,20 @@ const RiskPrediction = () => {
         {!result && !isLoading && (
           <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle>Sample Scenarios</CardTitle>
+              <CardTitle>Sample Workplace Scenarios</CardTitle>
               <CardDescription>
-                Try these example scenarios to see how the risk prediction works
+                Click on these examples to see HIRARC analysis in action
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {[
-                  "Working on a ladder to clean windows on the second floor without safety harness",
-                  "Handling chemicals in a poorly ventilated storage room without proper PPE",
-                  "Operating machinery with a loose guard rail and no safety training",
-                  "Electrical work in a damp environment without proper isolation procedures"
+                  "Working on a ladder 12 feet high to clean windows without safety harness in windy conditions",
+                  "Electrical maintenance on live 480V panel without lockout/tagout procedures",
+                  "Handling sulfuric acid without proper PPE in poorly ventilated area",
+                  "Hot work welding near flammable materials without fire watch",
+                  "Operating metal cutting machine with damaged safety guard",
+                  "Confined space entry into storage tank without permit or attendant"
                 ].map((example, index) => (
                   <Button
                     key={index}

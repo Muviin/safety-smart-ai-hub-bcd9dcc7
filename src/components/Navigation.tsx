@@ -1,27 +1,17 @@
 
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { Shield, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
-import { Shield, LogOut, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
 const Navigation = () => {
-  const { user, logout } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   const navLinks = [
     { to: '/dashboard', label: 'Dashboard' },
     { to: '/risk-prediction', label: 'Risk Prediction' },
-    { to: '/knowledge-base', label: 'Knowledge Base' },
-    { to: '/profile', label: 'Profile' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -53,22 +43,6 @@ const Navigation = () => {
             ))}
           </div>
 
-          {/* User Menu */}
-          <div className="hidden md:flex items-center space-x-4">
-            <span className="text-sm text-muted-foreground">
-              Welcome, {user?.name}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="flex items-center space-x-2"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Logout</span>
-            </Button>
-          </div>
-
           {/* Mobile menu button */}
           <Button
             variant="ghost"
@@ -98,20 +72,6 @@ const Navigation = () => {
                   {link.label}
                 </Link>
               ))}
-              <div className="pt-4 pb-2 border-t border-border">
-                <div className="px-3 py-2 text-sm text-muted-foreground">
-                  Welcome, {user?.name}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="mx-3 flex items-center space-x-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </Button>
-              </div>
             </div>
           </div>
         )}
